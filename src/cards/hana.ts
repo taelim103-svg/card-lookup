@@ -29,7 +29,10 @@ export const check: CardChecker = async (bizNo) => {
       });
       clearTimeout(timer);
       if (!res.ok) return { card: '하나', status: 'error', error: `HTTP ${res.status}`, elapsedMs: Date.now() - start };
-      const json = await res.json();
+      // 하나카드는 EUC-KR JSON 응답. UTF-8로 읽으면 한글 깨짐.
+      const buf = await res.arrayBuffer();
+      const text = new TextDecoder('euc-kr').decode(buf);
+      const json = JSON.parse(text);
       if (json?.result !== 'success') {
         return { card: '하나', status: 'error', error: 'invalid_response', elapsedMs: Date.now() - start };
       }
