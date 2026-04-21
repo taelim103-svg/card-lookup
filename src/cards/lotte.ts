@@ -1,4 +1,4 @@
-import type { CardChecker } from './types';
+import type { CardChecker, Merchant } from './types';
 
 const URL = 'https://merchant.lottecard.co.kr/app/LMSVCFA_V101.lc';
 const TIMEOUT_MS = 10000;
@@ -25,18 +25,23 @@ export const check: CardChecker = async (bizNo) => {
       return { card: '롯데', status: 'error', error: json?.Status?.message ?? 'unknown', elapsedMs: Date.now() - start };
     }
     const content: string = json.Content ?? '';
-    const tdMatch = content.match(/<td[^>]*>([^<]+)<\/td>\s*<td[^>]*>([^<]+)<\/td>\s*<td[^>]*>([^<]+)<\/td>/);
-    if (tdMatch) {
-      return {
-        card: '롯데',
-        status: 'registered',
-        merchantNo: tdMatch[1].trim(),
-        merchantName: tdMatch[2].trim(),
-        joinDate: tdMatch[3].trim(),
-        elapsedMs: Date.now() - start,
-      };
+    // 모든 tr 파싱: <td>가맹점번호</td><td>상호</td><td>가입일</td><td>상태</td>
+    const merchants: Merchant[] = [];
+    const trRegex = /<tr[^>]*>\s*<td[^>]*>([^<]+)<\/td>\s*<td[^>]*>([^<]+)<\/td>\s*<td[^>]*>([^<]+)<\/td>\s*<td[^>]*>([^<]+)<\/td>\s*<\/tr>/g;
+    let m;
+    while ((m = trRegex.exec(content)) !== null) {
+      const status = m[4].trim();
+      merchants.push({
+        no: m[1].trim(),
+        name: m[2].trim(),
+        date: m[3].trim(),
+        cancelled: status.includes('해지'),
+      });
     }
-    return { card: '롯데', status: 'not_registered', elapsedMs: Date.now() - start };
+    if (merchants.length === 0) {
+      return { card: '롯데', status: 'not_registered', elapsedMs: Date.now() - start };
+    }
+    return { card: '롯데', status: 'registered', merchants, elapsedMs: Date.now() - start };
   } catch (e) {
     clearTimeout(timer);
     const msg = e instanceof Error ? e.message : String(e);

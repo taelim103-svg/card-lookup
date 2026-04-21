@@ -1,5 +1,5 @@
 import { getCookie } from '@/lib/kv';
-import type { CardChecker } from '@/cards/types';
+import type { CardChecker, Merchant } from '@/cards/types';
 
 const API_URL = 'https://m.wooricard.com/dcmw/yh1/mcd/mcd14/getListMchNo.pwkjson';
 const PAGE_URL = 'https://m.wooricard.com/dcmw/yh1/mcd/mcd14/M1MCD214S30.do';
@@ -36,7 +36,14 @@ export const check: CardChecker = async (bizNo) => {
       clearTimeout(timer);
       if (!res.ok) return { card: '우리', status: 'error', error: `HTTP ${res.status}`, elapsedMs: Date.now() - start };
       const json = await res.json();
-      const resCode = json?.elHeader?.resCode;
+      const resMsg: string = json?.elHeader?.resMsg ?? '';
+      const resCode: string = json?.elHeader?.resCode ?? '';
+
+      // 조회 가능 시도 횟수 초과 감지
+      if (resMsg.includes('횟수가 초과') || resMsg.includes('횟수 초과')) {
+        return { card: '우리', status: 'rate_limited', elapsedMs: Date.now() - start };
+      }
+
       if (resCode && resCode !== 'ERROR.NONE' && !json?.eaiResMap) {
         return {
           card: '우리',
@@ -47,17 +54,15 @@ export const check: CardChecker = async (bizNo) => {
       }
       const m = json?.eaiResMap;
       const totCn = parseInt(m?.TOT_CN_5 ?? '0', 10);
-      const rows = Array.isArray(m?.R1610) ? m.R1610 : [];
+      const rows: Array<Record<string, string>> = Array.isArray(m?.R1610) ? m.R1610 : [];
       if (totCn > 0 && rows.length > 0) {
-        const row = rows[0];
-        return {
-          card: '우리',
-          status: 'registered',
-          merchantName: row?.MCH_NM_100,
-          merchantNo: row?.MCH_NO_9,
-          joinDate: row?.OPN_ENT_DT_8,
-          elapsedMs: Date.now() - start,
-        };
+        // 우리카드 응답에는 해지일 필드가 없으므로 cancelled 미판정
+        const merchants: Merchant[] = rows.map((row) => ({
+          name: row?.MCH_NM_100 ?? '',
+          no: row?.MCH_NO_9 ?? '',
+          date: row?.OPN_ENT_DT_8,
+        }));
+        return { card: '우리', status: 'registered', merchants, elapsedMs: Date.now() - start };
       }
       return { card: '우리', status: 'not_registered', elapsedMs: Date.now() - start };
     } finally {
