@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { runWarmup } from '@/warmup';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
@@ -14,7 +13,8 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
   try {
-    const summary = await runWarmup();
+    const mod = await import('@/warmup');
+    const summary = await mod.runWarmup();
     return NextResponse.json(summary);
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
