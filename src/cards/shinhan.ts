@@ -4,6 +4,12 @@ import type { CardChecker } from '@/cards/types';
 const URL = 'https://www.shinhancard.com/hpe/HPEINFON/mchtNA01List.shc';
 const TIMEOUT_MS = 10000;
 
+function decodeHtmlEntities(s: string): string {
+  return s
+    .replace(/&#(\d+);/g, (_, code) => String.fromCodePoint(parseInt(code, 10)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, code) => String.fromCodePoint(parseInt(code, 16)));
+}
+
 export const check: CardChecker = async (bizNo) => {
   const start = Date.now();
   try {
@@ -38,7 +44,7 @@ export const check: CardChecker = async (bizNo) => {
           card: '신한',
           status: 'registered',
           merchantNo: m[1],
-          merchantName: m[2].trim(),
+          merchantName: decodeHtmlEntities(m[2].trim()),
           joinDate: m[3].trim(),
           elapsedMs: Date.now() - start,
         };
