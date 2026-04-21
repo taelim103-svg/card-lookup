@@ -9,12 +9,12 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@sparticuz/chromium": "^131.0.0",
+    "@sparticuz/chromium": "^147.0.2",
     "@upstash/redis": "^1.34.0",
     "clsx": "^2.1.1",
     "lucide-react": "^0.460.0",
     "next": "^16.0.0",
-    "puppeteer-core": "^23.8.0",
+    "puppeteer-core": "^24.42.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tailwind-merge": "^2.5.0",
