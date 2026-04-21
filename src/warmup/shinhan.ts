@@ -5,14 +5,16 @@ const WARMUP_BIZNO = '0000000000';
 
 export const warmupShinhan: WarmupScenario = async (page) => {
   try {
-    await page.goto(PAGE_URL, { waitUntil: 'networkidle2', timeout: 30000 });
+    // 신한카드는 networkidle2 도달이 느려 domcontentloaded로 변경
+    await page.goto(PAGE_URL, { waitUntil: 'domcontentloaded', timeout: 30000 });
     await page.type('#ssn', WARMUP_BIZNO);
     await page.evaluate(() => {
       const fn = (window as unknown as { fnSearch?: () => void }).fnSearch;
       if (typeof fn === 'function') fn();
     });
+    // 네비게이션 완료 대기 (빠른 domcontentloaded)
     await page
-      .waitForNavigation({ waitUntil: 'networkidle2', timeout: 15000 })
+      .waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 15000 })
       .catch(() => {});
     const cookies = await page.cookies();
     const cookieHeader = cookies.map((c) => `${c.name}=${c.value}`).join('; ');
