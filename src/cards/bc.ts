@@ -36,22 +36,24 @@ export const check: CardChecker = async (bizNo) => {
     const merchants: Merchant[] = [];
     for (const key of Object.keys(json.resData)) {
       if (!key.startsWith('rsMCN')) continue;
-      const row = json.resData[key]?.rowData;
-      if (!row) continue;
-      const rawCancel = row.cnlDate;
-      const cancelDate =
-        typeof rawCancel === 'string'
-          ? rawCancel.trim()
-          : Array.isArray(rawCancel)
-            ? String(rawCancel[0] ?? '').trim()
-            : '';
-      merchants.push({
-        name: row.merNm ?? '',
-        no: row.merNo ?? '',
-        date: row.regDate,
-        cancelled: !!cancelDate,
-        cancelDate: cancelDate || undefined,
-      });
+      const src = json.resData[key]?.sourceObject;
+      if (!src) continue;
+      const names: string[] = Array.isArray(src.merNm) ? src.merNm : [];
+      const nos: string[] = Array.isArray(src.merNo) ? src.merNo : [];
+      const dates: string[] = Array.isArray(src.regDate) ? src.regDate : [];
+      const cancels: string[] = Array.isArray(src.cnlDate) ? src.cnlDate : [];
+      for (let i = 0; i < nos.length; i++) {
+        const no = (nos[i] ?? '').trim();
+        if (!no) continue;
+        const cancelDate = (cancels[i] ?? '').trim();
+        merchants.push({
+          name: names[i] ?? '',
+          no,
+          date: dates[i] ?? '',
+          cancelled: !!cancelDate,
+          cancelDate: cancelDate || undefined,
+        });
+      }
     }
     if (merchants.length === 0) {
       return { card: '비씨', status: 'not_registered', elapsedMs: Date.now() - start };

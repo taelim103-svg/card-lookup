@@ -1,3 +1,4 @@
+import { decodeHtmlEntities } from '@/lib/html';
 import type { CardChecker, Merchant } from './types';
 
 const URL = 'https://www.samsungcard.com/service/SHPMCO0202S02';
@@ -46,7 +47,7 @@ export const check: CardChecker = async (bizNo) => {
       return { card: '삼성', status: 'not_registered', elapsedMs: Date.now() - start };
     }
     const merchants: Merchant[] = grid.map((row) => ({
-      name: row?.mrcNm ?? '',
+      name: decodeHtmlEntities(row?.mrcNm ?? ''),
       no: row?.mrcno ?? '',
       date: row?.mrcCntrDt,
       cancelled: row?.mrcStc !== STATUS_ACTIVE,

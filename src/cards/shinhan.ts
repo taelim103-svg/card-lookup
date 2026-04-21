@@ -1,14 +1,9 @@
 import { getCookie } from '@/lib/kv';
+import { decodeHtmlEntities } from '@/lib/html';
 import type { CardChecker, Merchant } from '@/cards/types';
 
 const URL = 'https://www.shinhancard.com/hpe/HPEINFON/mchtNA01List.shc';
 const TIMEOUT_MS = 10000;
-
-function decodeHtmlEntities(s: string): string {
-  return s
-    .replace(/&#(\d+);/g, (_, code) => String.fromCodePoint(parseInt(code, 10)))
-    .replace(/&#x([0-9a-f]+);/gi, (_, code) => String.fromCodePoint(parseInt(code, 16)));
-}
 
 export const check: CardChecker = async (bizNo) => {
   const start = Date.now();

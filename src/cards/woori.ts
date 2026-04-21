@@ -1,4 +1,5 @@
 import { getCookie } from '@/lib/kv';
+import { decodeHtmlEntities } from '@/lib/html';
 import type { CardChecker, Merchant } from '@/cards/types';
 
 const API_URL = 'https://m.wooricard.com/dcmw/yh1/mcd/mcd14/getListMchNo.pwkjson';
@@ -58,7 +59,7 @@ export const check: CardChecker = async (bizNo) => {
       if (totCn > 0 && rows.length > 0) {
         // 우리카드 응답에는 해지일 필드가 없으므로 cancelled 미판정
         const merchants: Merchant[] = rows.map((row) => ({
-          name: row?.MCH_NM_100 ?? '',
+          name: decodeHtmlEntities(row?.MCH_NM_100 ?? ''),
           no: row?.MCH_NO_9 ?? '',
           date: row?.OPN_ENT_DT_8,
         }));
