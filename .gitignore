@@ -8,3 +8,6 @@ node_modules/
 next-env.d.ts
 *.tsbuildinfo
 .env*.local
+
+# 대형가맹점 원본 (반기마다 갱신 → scripts/build-large-merchants.mjs 로 샤드 생성)
+/여신협 대형가맹점리스트*.txt
